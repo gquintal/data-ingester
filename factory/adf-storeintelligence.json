@@ -1,0 +1,9 @@
+{
+	"name": "adf-storeintelligence",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "2cc9aab5-928d-48c7-8fc9-b25895a39009",
+		"tenantId": "6466443c-b7d1-450e-9a35-8909bafad444"
+	}
+}

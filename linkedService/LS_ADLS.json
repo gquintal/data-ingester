@@ -1,0 +1,22 @@
+{
+	"name": "LS_ADLS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://adlsstoreintelligence.dfs.core.windows.net/",
+			"tenant": "6466443c-b7d1-450e-9a35-8909bafad444",
+			"servicePrincipalId": "ae2e3204-243a-4314-8b4a-407da2093d9f",
+			"servicePrincipalCredentialType": "ServicePrincipalKey",
+			"servicePrincipalCredential": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_AKV",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "app-client-secret-storeintelligence"
+			}
+		}
+	}
+}
