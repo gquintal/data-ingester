@@ -18,6 +18,6 @@ steps:
 
   # Añade GitHub como remoto e impulsa la rama actual
   - script: |
-      git remote add github https://$(GITHUB_PAT)@github.com/gquintal/kaggle_ingest.git
+      git remote add github https://$(GITHUB_PAT)@github.com/gquintal/Laboratorios.git
       git push github HEAD:main --force
     displayName: 'Mirror a GitHub'
