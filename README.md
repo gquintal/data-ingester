@@ -61,6 +61,11 @@ Incluye:
 4. Sube los archivos procesados al contenedor de Azure Data Lake Storage.
 5. Deja un marcador de éxito (_SUCCESS.txt) tras la carga.
 
+## Diagramas
+![Diagrama de Arquitectura](./images/ADF-ADLS.png)
+
+![Diagrama de Arquitectura](./images/ADF-Databricks.png)
+
 ## Notas
 
 - Requiere permisos para acceder a Key Vault y ADLS.
