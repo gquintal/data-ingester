@@ -1,0 +1,11 @@
+# Azure dependencies
+azure-identity
+azure-keyvault-secrets
+azure-storage-blob
+
+# Kaggle API
+kaggle
+
+# Data processing
+pandas
+openpyxl
