@@ -1,0 +1,263 @@
+{
+	"name": "KaggleIngest",
+	"properties": {
+		"activities": [
+			{
+				"name": "TriggerGitHubAction",
+				"description": "Trigger GitHub Action to process Kaggle dataset",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "GetGitHubToken",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"headers": {
+						"Authorization": {
+							"value": "@{concat('token ', activity('GetGitHubToken').output.value)}",
+							"type": "Expression"
+						},
+						"Accept": "application/vnd.github.v3+json",
+						"Content-Type": "application/json"
+					},
+					"url": "https://api.github.com/repos/gquintal/data-ingester/actions/workflows/kaggle-ingest.yml/dispatches",
+					"body": {
+						"ref": "develop",
+						"inputs": {
+							"dataset": "@{pipeline().parameters.dataset}",
+							"container_name": "@{pipeline().parameters.container_name}"
+						}
+					}
+				}
+			},
+			{
+				"name": "GetGitHubToken",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "GET",
+					"linkedServices": [
+						{
+							"referenceName": "LS_AKV",
+							"type": "LinkedServiceReference"
+						}
+					],
+					"url": "https://kv-store-intelligence.vault.azure.net/secrets/github-token?api-version=7.0",
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://vault.azure.net/"
+					}
+				}
+			},
+			{
+				"name": "TransformKaggleData",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "CleanupSuccess",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "TransformKaggleData",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "WaitForIngestionComplete",
+				"description": "",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "TriggerGitHubAction",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('files_ready')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "CheckForSuccessFile",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "LS_MD",
+									"type": "DatasetReference"
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						},
+						{
+							"name": "UpdateFileStatus",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "CheckForSuccessFile",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "files_ready",
+								"value": {
+									"value": "@activity('CheckForSuccessFile').output.exists",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "WaitIfNotReady",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "UpdateFileStatus",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@not(variables('files_ready'))",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "Wait30",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 30
+										}
+									}
+								]
+							}
+						}
+					],
+					"timeout": "01:00:00"
+				}
+			},
+			{
+				"name": "CleanupSuccess",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "WaitForIngestionComplete",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "LS_MD",
+						"type": "DatasetReference"
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"parameters": {
+			"dataset": {
+				"type": "string",
+				"defaultValue": "jillanisofttech/flight-price-prediction-dataset"
+			},
+			"container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			}
+		},
+		"variables": {
+			"files_ready": {
+				"type": "Boolean",
+				"defaultValue": false
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-07-28T22:09:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

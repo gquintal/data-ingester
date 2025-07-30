@@ -1,0 +1,28 @@
+{
+	"name": "KaggleIngest",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "KaggleIngest",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"dataset": "jillanisofttech/flight-price-prediction-dataset",
+					"container_name": "raw"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2025-07-29T01:00:00",
+				"timeZone": "Central Standard Time (Mexico)"
+			}
+		}
+	}
+}

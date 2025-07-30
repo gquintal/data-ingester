@@ -1,0 +1,99 @@
+{
+	"name": "TransformKaggleData",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Source",
+						"type": "DatasetReference"
+					},
+					"name": "SourceCSVs"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sink",
+						"type": "DatasetReference"
+					},
+					"name": "PartitionedSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "WithYearMonth"
+				},
+				{
+					"name": "MapDrifted",
+					"description": "Creates an explicit mapping for each drifted column"
+				},
+				{
+					"name": "RemoveDuplicates"
+				},
+				{
+					"name": "FilterRows"
+				},
+				{
+					"name": "FileName"
+				}
+			],
+			"scriptLines": [
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: true) ~> SourceCSVs",
+				"MapDrifted derive(Year_Month = concat(toString(year(toDate(byName('Date_of_Journey'), \"dd/MM/yyyy\"))), \"-\", right(concat(\"0\", toString(month(toDate(byName('Date_of_Journey'), \"dd/MM/yyyy\")))), 2))) ~> WithYearMonth",
+				"SourceCSVs derive(Airline = toString(byName('Airline')),",
+				"          Date_of_Journey = toString(byName('Date_of_Journey')),",
+				"          Source = toString(byName('Source')),",
+				"          Destination = toString(byName('Destination')),",
+				"          Route = toString(byName('Route')),",
+				"          Dep_Time = toString(byName('Dep_Time')),",
+				"          Arrival_Time = toString(byName('Arrival_Time')),",
+				"          Duration = toString(byName('Duration')),",
+				"          Total_Stops = toString(byName('Total_Stops')),",
+				"          Additional_Info = toString(byName('Additional_Info')),",
+				"          Price = toString(byName('Price'))) ~> MapDrifted",
+				"WithYearMonth window(over(Airline,",
+				"          Date_of_Journey,",
+				"          Source,",
+				"          Destination,",
+				"          Route,",
+				"          Dep_Time,",
+				"          Arrival_Time,",
+				"          Duration,",
+				"          Total_Stops,",
+				"          Additional_Info,",
+				"          Price,",
+				"          year_month = Year_Month),",
+				"     asc(Date_of_Journey, true),",
+				"     row_number = rowNumber()) ~> RemoveDuplicates",
+				"RemoveDuplicates filter(row_number == 1) ~> FilterRows",
+				"FilterRows derive(File_Name = concat('proyecto_', Year_Month, '.csv')) ~> FileName",
+				"FileName sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     rowUrlColumn:'File_Name',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Airline,",
+				"          Date_of_Journey,",
+				"          Source,",
+				"          Destination,",
+				"          Route,",
+				"          Dep_Time,",
+				"          Arrival_Time,",
+				"          Duration,",
+				"          Total_Stops,",
+				"          Additional_Info,",
+				"          Price,",
+				"          Year_Month",
+				"     )) ~> PartitionedSink"
+			]
+		}
+	}
+}
