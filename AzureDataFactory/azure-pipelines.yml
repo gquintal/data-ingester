@@ -1,0 +1,23 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Crea en tu Pipeline → Variables → Add → GitHub_PAT (secret)
+  - name: GITHUB_PAT
+    value: $(GitHub_PAT)
+
+steps:
+  # Clona tu repo de Azure DevOps con credenciales
+  - checkout: self
+    persistCredentials: true
+
+  # Añade GitHub como remoto e impulsa la rama actual
+  - script: |
+      git remote add github https://$(GITHUB_PAT)@github.com/gquintal/Laboratorios.git
+      git push github HEAD:main --force
+    displayName: 'Mirror a GitHub'
