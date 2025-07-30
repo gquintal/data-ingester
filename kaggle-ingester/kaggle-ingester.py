@@ -214,10 +214,10 @@ def main():
                     data=success_content.encode('utf-8'), 
                     overwrite=True
                 )
-                logger.info(f"✅ Success marker created: {success_blob_name}")
+                logger.info(f"Success marker created: {success_blob_name}")
                 
             except Exception as e:
-                logger.error(f"⚠️ Could not create success marker: {str(e)}")
+                logger.error(f"Could not create success marker: {str(e)}")
                 # No fallar por esto - el proceso principal fue exitoso
             
     except Exception as e:
