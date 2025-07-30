@@ -1,0 +1,38 @@
+name: Sincronizar Azure DevOps en subcarpeta
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:          # para ejecución manual
+jobs:
+  import-subtree:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repo de GitHub
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar identidad de git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Añadir remoto de Azure DevOps y fetch
+        run: |
+          git remote add azure \
+            https://x-access-token:${{ secrets.AZURE_DEVOPS_PAT }}@dev.azure.com/certificacioneslabs/Store%20Intelligence/_git/Store%20Intelligence
+          git fetch azure
+
+      - name: Importar o actualizar subtree
+        run: |
+          if [ -d AzureDataFactory ]; then
+            git subtree pull --prefix=AzureDataFactory azure main
+          else
+            git subtree add --prefix=AzureDataFactory azure main
+          fi
+
+      - name: Push de cambios a GitHub
+        run: git push origin HEAD:main
