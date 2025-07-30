@@ -32,9 +32,9 @@
 						"Accept": "application/vnd.github.v3+json",
 						"Content-Type": "application/json"
 					},
-					"url": "https://api.github.com/repos/gquintal/Laboratorios/actions/workflows/kaggle-ingest.yml/dispatches",
+					"url": "https://api.github.com/repos/gquintal/data-ingester/actions/workflows/kaggle-ingest.yml/dispatches",
 					"body": {
-						"ref": "Develop",
+						"ref": "develop",
 						"inputs": {
 							"dataset": "@{pipeline().parameters.dataset}",
 							"container_name": "@{pipeline().parameters.container_name}"
