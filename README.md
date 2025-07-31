@@ -62,9 +62,9 @@ Incluye:
 5. Deja un marcador de éxito (_SUCCESS.txt) tras la carga.
 
 ## Diagramas
-![Diagrama de Arquitectura](./images/ADF-ADLS.png)
+![Diagrama de Arquitectura](./img/ADF-ADLS.png)
 
-![Diagrama de Arquitectura](./images/ADF-Databricks.png)
+![Diagrama de Arquitectura](./img/ADF-Databricks.png)
 
 ## Notas
 
@@ -77,4 +77,4 @@ Las contribuciones son bienvenidas. Abre un issue o pull request para sugerencia
 
 ## Licencia
 
-[Especificar aquí la licencia si aplica.]
+See the [LICENSE](https://github.com/gquintal/data-ingester/blob/main/LICENSE) file for details.
